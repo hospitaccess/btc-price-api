@@ -1,29 +1,47 @@
 import os
-from flask import Flask, jsonify
 import requests
+from flask import Flask, jsonify, request
+from datetime import datetime
 
-app = Flask(__name__)
+@app.route("/btc-history")
+def btc_history():
+    try:
+        # Récupération des paramètres d'URL
+        interval = request.args.get("interval", "day")  # "minute", "hour", "day"
+        limit = int(request.args.get("limit", 2000))    # max 2000
+        tsym = request.args.get("tsym", "USD")
 
-@app.route("/")
-def home():
-    return "BTC API is running"
+        # Construction de l’URL vers CryptoCompare
+        interval_map = {
+            "minute": "histominute",
+            "hour": "histohour",
+            "day": "histoday"
+        }
+        if interval not in interval_map:
+            return jsonify({"error": "Invalid interval. Use 'minute', 'hour' or 'day'"}), 400
 
-@app.route("/btc-price")
-def btc_price():
-    coingecko_url = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd"
-    response = requests.get(coingecko_url)
-    data = response.json()
-    
-    # Sécurisation en cas d'erreur inattendue
-    if "bitcoin" not in data or "usd" not in data["bitcoin"]:
-        return jsonify({"error": "Price not found", "response": data}), 500
+        url = f"https://min-api.cryptocompare.com/data/v2/{interval_map[interval]}?fsym=BTC&tsym={tsym}&limit={limit}"
+        response = requests.get(url)
+        data = response.json()["Data"]["Data"]
 
-    return jsonify({"btc_price_usdt": data["bitcoin"]["usd"]})
+        # Formatage des données
+        result = []
+        for d in data:
+            result.append({
+                "timestamp": datetime.utcfromtimestamp(d["time"]).isoformat() + "Z",
+                "open": d["open"],
+                "high": d["high"],
+                "low": d["low"],
+                "close": d["close"],
+                "volume_from": d.get("volumefrom"),
+                "volume_to": d.get("volumeto")
+            })
 
-if __name__ == "__main__":
-    print("Available routes: / and /btc-price")
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+        return jsonify(result)
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 
 
