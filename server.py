@@ -10,20 +10,20 @@ def home():
 
 @app.route("/btc-price")
 def btc_price():
-    binance_url = "https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT"
-    response = requests.get(binance_url)
+    coingecko_url = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd"
+    response = requests.get(coingecko_url)
     data = response.json()
-    print(data)  # Pour debug, à retirer en prod
+    
+    # Sécurisation en cas d'erreur inattendue
+    if "bitcoin" not in data or "usd" not in data["bitcoin"]:
+        return jsonify({"error": "Price not found", "response": data}), 500
 
-    # Vérifie que la clé "price" existe
-    if "price" not in data:
-        return jsonify({"error": "Price not found in response"}), 500
-
-    return jsonify({"btc_price_usdt": data["price"]})
+    return jsonify({"btc_price_usdt": data["bitcoin"]["usd"]})
 
 if __name__ == "__main__":
-    print("✅ Flask app starting with routes / and /btc-price")
+    print("Available routes: / and /btc-price")
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
