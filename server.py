@@ -13,14 +13,13 @@ def btc_price():
     binance_url = "https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT"
     response = requests.get(binance_url)
     data = response.json()
+    print(data)  # Pour debug, à retirer en prod
 
-    print("Binance response:", data)  # Affiche ce qui arrive
+    # Vérifie que la clé "price" existe
+    if "price" not in data:
+        return jsonify({"error": "Price not found in response"}), 500
 
-    # Vérifie si 'price' est bien là
-    if "price" in data:
-        return jsonify({"btc_price_usdt": data["price"]})
-    else:
-        return jsonify({"error": "Price not found", "response": data}), 500
+    return jsonify({"btc_price_usdt": data["price"]})
 
 if __name__ == "__main__":
     print("✅ Flask app starting with routes / and /btc-price")
