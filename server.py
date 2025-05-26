@@ -3,6 +3,8 @@ import requests
 from flask import Flask, jsonify, request
 from datetime import datetime
 
+app = Flask(__name__)  # ← CETTE LIGNE doit être AVANT toutes les routes
+
 @app.route("/btc-history")
 def btc_history():
     try:
