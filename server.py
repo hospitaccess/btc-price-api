@@ -16,6 +16,7 @@ def btc_price():
     return jsonify({"btc_price_usdt": data["price"]})
 
 if __name__ == "__main__":
+    print("Available routes: / and /btc-price")
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
 
